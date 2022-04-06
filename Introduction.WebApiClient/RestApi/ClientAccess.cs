@@ -49,5 +49,26 @@ namespace Introduction.WebApiClient.RestApi
                 throw new Exception(errorMessage);
             }
         }
+        public async Task<T?> GetByIdAsync<T>(string baseUri, string extUri, int id)
+        {
+            using var client = CreateClient(baseUri);
+            var response = await client.GetAsync($"{extUri}/{id}").ConfigureAwait(false);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var contentData = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                var result = await JsonSerializer.DeserializeAsync<T>(contentData, DeserializerOptions).ConfigureAwait(false);
+
+                return result;
+            }
+            else
+            {
+                string stringData = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string errorMessage = $"{response.ReasonPhrase}: {stringData}";
+
+                System.Diagnostics.Debug.WriteLine("{0} ({1})", (int)response.StatusCode, errorMessage);
+                throw new Exception(errorMessage);
+            }
+        }
     }
 }

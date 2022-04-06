@@ -4,23 +4,26 @@ namespace Introduction.WebApiClient
 {
     internal class Program
     {
+        private static string BaseUri = "https://localhost:7211/api/";
         static async Task Main(string[] args)
         {
             Console.WriteLine("Access to a RESTful-Service");
             Console.WriteLine();
 
-            await PrintGetResult();
         }
-        public static async Task PrintGetResult()
+        public static async Task<T[]> GetAsync<T>(string baseUri, string controller)
         {
-            var baseUri = "https://localhost:7211/api/";
             var clientAccess = new RestApi.ClientAccess();
-            var models = await clientAccess.GetAsync<Models.Student>(baseUri, "Students");
+            var models = await clientAccess.GetAsync<T>(baseUri, controller);
 
-            foreach (var item in models)
-            {
-                Console.WriteLine($"{item.LastName} {item.FirstName}");
-            }
+            return models;
+        }
+        public static async Task<T?> GetByIdasync<T>(string baseUri, string controller, int id)
+        {
+            var clientAccess = new RestApi.ClientAccess();
+            var model = await clientAccess.GetByIdAsync<T>(baseUri, controller, id);
+
+            return model;
         }
     }
 }

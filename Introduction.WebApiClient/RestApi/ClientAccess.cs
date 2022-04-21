@@ -93,5 +93,39 @@ namespace Introduction.WebApiClient.RestApi
                 throw new Exception(errorMessage);
             }
         }
+        public async Task<T?> PutAsync<T>(string baseUri, string controller, int id, T model)
+        {
+            using var client = CreateClient(baseUri);
+            var jsonData = JsonSerializer.Serialize(model);
+            var contentData = new StringContent(jsonData, Encoding.UTF8, MediaType);
+            var response = await client.PutAsync($"{controller}/{id}", contentData).ConfigureAwait(false);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var resultData = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+
+                return await JsonSerializer.DeserializeAsync<T>(resultData, DeserializerOptions).ConfigureAwait(false);
+            }
+            else
+            {
+                string errorMessage = $"{response.ReasonPhrase}: { await response.Content.ReadAsStringAsync().ConfigureAwait(false) }";
+
+                System.Diagnostics.Debug.WriteLine("{0} ({1})", (int)response.StatusCode, errorMessage);
+                throw new Exception(errorMessage);
+            }
+        }
+        public async Task DeleteAsync(string baseUri, string controller, int id)
+        {
+            using var client = CreateClient(baseUri);
+            var response = await client.DeleteAsync($"{controller}/{id}").ConfigureAwait(false);
+
+            if (response.IsSuccessStatusCode == false)
+            {
+                string errorMessage = $"{response.ReasonPhrase}: { await response.Content.ReadAsStringAsync().ConfigureAwait(false) }";
+
+                System.Diagnostics.Debug.WriteLine("{0} ({1})", (int)response.StatusCode, errorMessage);
+                throw new Exception(errorMessage);
+            }
+        }
     }
 }

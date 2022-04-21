@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 
 namespace Introduction.WebApiClient.RestApi
@@ -65,6 +66,28 @@ namespace Introduction.WebApiClient.RestApi
             {
                 string stringData = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 string errorMessage = $"{response.ReasonPhrase}: {stringData}";
+
+                System.Diagnostics.Debug.WriteLine("{0} ({1})", (int)response.StatusCode, errorMessage);
+                throw new Exception(errorMessage);
+            }
+        }
+
+        public async Task<T?> PostAsync<T>(string baseUri, string controller, T model)
+        {
+            using var client = CreateClient(baseUri);
+            var jsonData = JsonSerializer.Serialize(model);
+            var contentData = new StringContent(jsonData, Encoding.UTF8, MediaType);
+            var response = await client.PostAsync($"{controller}", contentData).ConfigureAwait(false);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var resultData = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+
+                return await JsonSerializer.DeserializeAsync<T>(resultData, DeserializerOptions).ConfigureAwait(false);
+            }
+            else
+            {
+                string errorMessage = $"{response.ReasonPhrase}: { await response.Content.ReadAsStringAsync().ConfigureAwait(false) }";
 
                 System.Diagnostics.Debug.WriteLine("{0} ({1})", (int)response.StatusCode, errorMessage);
                 throw new Exception(errorMessage);
